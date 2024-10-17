@@ -1,6 +1,8 @@
 const cors = require('cors')
 const express = require("express");
 const app = express();
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() }); // Guarda el archivo en memoria como buffer
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs"); //Importamos el paquete que nos permite encriptar las contraseñas
 const bodyParser = require("body-parser");
@@ -33,7 +35,7 @@ sequelize
 // Endpoint para obtener todos los usuarios
 app.get('/users', verifyToken, async (req, res) => {
   try {
-      const users = await User.findAll({ attributes: ['id', 'nombre', 'password', 'rol'] }); // Puedes especificar los atributos que quieres devolver
+      const users = await User.findAll({ attributes: ['id', 'nombre', 'password', 'rol', 'email'] }); // Puedes especificar los atributos que quieres devolver
       res.json(users);
   } catch (error) {
       console.error('Error al obtener usuarios:', error);
@@ -42,7 +44,7 @@ app.get('/users', verifyToken, async (req, res) => {
 });
 
 //Ruta para registrar usuarios
-app.post("/register", async (req, res) => {
+app.post("/register-user", async (req, res) => {
   const { nombre, password, email, rol } = req.body;
 
   try {
@@ -97,9 +99,10 @@ app.post('/logout', (req, res) => {
 });
 
 //Ruta para cargar pagos
-app.post("/pagos", async (req, res) => {
+app.post("/pagos", upload.single("comprobante"), async (req, res) => {
   try {
-    const { fechaPago, metodoPago, descripcion, monto, activo, comprobante } = req.body;
+    const { fechaPago, metodoPago, descripcion, monto, activo } = req.body;
+    const comprobante = req.file ? req.file.buffer : null;
 
     const newPago = await Payment.create({ fechaPago, metodoPago, descripcion, monto, activo, comprobante });
 
@@ -108,7 +111,8 @@ app.post("/pagos", async (req, res) => {
     res.status(500).json({ error: "Error al cargar el pago" });
   }
 });
-//Ruta que devuelve la info de los pagos cargados
+
+//Ruta que devuelve la info de los pagos cargados verificando el token
 app.get('/pagos', verifyToken, async (req, res) => {
   try {
       const pagos = await Pago.findAll({ attributes: ['id', 'fechaPago', 'metodoPago', 'descripcion', 'monto', 'createdAt'] }); // Puedes especificar los atributos que quieres devolver
@@ -117,9 +121,4 @@ app.get('/pagos', verifyToken, async (req, res) => {
       console.error('Error al obtener pagos:', error);
       res.status(500).json({ message: 'Error al obtener pagos' });
   }
-});
-
-// Ruta protegida de ejemplo
-app.get('/protected', verifyToken, (req, res) => {
-  res.json({ message: 'This is a protected route', userId: req.userId });
 });

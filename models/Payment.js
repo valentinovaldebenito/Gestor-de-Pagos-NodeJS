@@ -24,7 +24,7 @@ const Pago = sequelize.define("Pago", {
     allowNull: false,
   },
   comprobante: {
-    type: DataTypes.BLOB,
+    type: DataTypes.BLOB('long'),
     allowNull: true,
   },
 });
