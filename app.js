@@ -100,26 +100,19 @@ app.post("/logout", (req, res) => {
   res.json({ message: "Logout exitoso" });
 });
 
-//Ruta para cargar pagos
-/* app.post("/pagos", upload.single("comprobante"), async (req, res) => {
-  try {
-    const { fechaPago, metodoPago, descripcion, monto, activo } = req.body;
-    const comprobante = req.file ? req.file.buffer : null;
-
-    const newPago = await Payment.create({ fechaPago, metodoPago, descripcion, monto, activo, comprobante });
-
-    res.status(201).json(newPago);
-  } catch {
-    res.status(500).json({ error: "Error al cargar el pago" });
-  }
-}); */
-
 app.post("/pagos", async (req, res) => {
   try {
     const { fechaPago, metodoPago, descripcion, monto, activo, comprobante } = req.body;
 
-    // Crea el nuevo pago con el comprobante en base64
-    const newPago = await Payment.create({ fechaPago, metodoPago, descripcion, monto, activo, comprobante });
+    const newPago = await Payment.create({
+      fechaPago,
+      metodoPago,
+      descripcion,
+      monto,
+      activo,
+      comprobanteBase64: comprobante.base64, // Almacena el archivo en base64
+      mimeType: comprobante.mimeType,        // Almacena el tipo MIME
+    });
 
     res.status(201).json(newPago);
   } catch (error) {
