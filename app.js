@@ -47,23 +47,19 @@ app.get("/users", verifyToken, async (req, res) => {
 
 //Ruta para registrar usuarios
 app.post("/register-user", verifyToken, isRoleValid, async (req, res) => {
-  const { nombre, password, email, rol, currentRol } = req.body;
+  const { nombre, password, email, rol } = req.body;
 
-  if (!isRoleValid) {
-    try {
-      // Encripta la contraseña
-      const salt = bcrypt.genSaltSync(10);
-      const hashedPassword = bcrypt.hashSync(password, salt);
+  try {
+    // Encripta la contraseña
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
 
-      // Crea un nuevo usuario
-      const user = await User.create({ nombre, password: hashedPassword, email, rol });
-      res.status(201).json({ message: "Usuario creado exitosamente", user: user });
-    } catch (error) {
-      console.error("Error al registrar el usuario:", error);
-      res.status(500).json({ message: "Error al crear usuario" });
-    }
-  } else {
-    res.status(403).json({ message: `No tiene permisos para realizar esa acción, currentRol: ${typeof(currentRol)}` });
+    // Crea un nuevo usuario
+    const user = await User.create({ nombre, password: hashedPassword, email, rol });
+    res.status(201).json({ message: "Usuario creado exitosamente", user: user });
+  } catch (error) {
+    console.error("Error al registrar el usuario:", error);
+    res.status(500).json({ message: "Error al crear usuario" });
   }
 });
 
