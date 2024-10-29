@@ -76,10 +76,10 @@ app.post("/login", async (req, res) => {
     }
 
     // Compara la contraseña
-    /* const isPasswordValid = bcrypt.compareSync(password, user.password);
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Contraseña incorrecta" });
-    } */
+    }
 
     // Genera un JWT
     const token = jwt.sign({ userId: user.id }, "tu_secreto", { expiresIn: "1h" });
@@ -101,7 +101,7 @@ app.post("/logout", (req, res) => {
 });
 
 //Ruta para cargar pagos
-app.post("/pagos", upload.single("comprobante"), async (req, res) => {
+/* app.post("/pagos", upload.single("comprobante"), async (req, res) => {
   try {
     const { fechaPago, metodoPago, descripcion, monto, activo } = req.body;
     const comprobante = req.file ? req.file.buffer : null;
@@ -112,12 +112,26 @@ app.post("/pagos", upload.single("comprobante"), async (req, res) => {
   } catch {
     res.status(500).json({ error: "Error al cargar el pago" });
   }
+}); */
+
+app.post("/pagos", async (req, res) => {
+  try {
+    const { fechaPago, metodoPago, descripcion, monto, activo, comprobante } = req.body;
+
+    // Crea el nuevo pago con el comprobante en base64
+    const newPago = await Payment.create({ fechaPago, metodoPago, descripcion, monto, activo, comprobante });
+
+    res.status(201).json(newPago);
+  } catch (error) {
+    console.error("Error al cargar el pago:", error);
+    res.status(500).json({ error: "Error al cargar el pago" });
+  }
 });
 
 //Ruta que devuelve la info de los pagos cargados verificando el token
 app.get("/pagos", verifyToken, async (req, res) => {
   try {
-    const pagos = await Pago.findAll({ attributes: ["id", "fechaPago", "metodoPago", "descripcion", "monto", "createdAt"] }); // Puedes especificar los atributos que quieres devolver
+    const pagos = await Pago.findAll({ attributes: ["id", "fechaPago", "metodoPago", "descripcion", "monto", "createdAt", "comprobante"] }); // Puedes especificar los atributos que quieres devolver
     res.json(pagos);
   } catch (error) {
     console.error("Error al obtener pagos:", error);
